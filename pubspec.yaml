@@ -1,0 +1,57 @@
+name: ieparentapp
+description: Aplikasi Edukasi Parenting Digital Berbasis Mobile
+
+environment:
+  sdk: ">=2.17.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.8.4
+  fl_chart: ^0.66.0
+  intl: ^0.19.0
+  cached_network_image: ^3.3.0
+  url_launcher: ^6.2.5
+  fluttertoast: ^8.2.2
+  awesome_dialog: ^3.0.2
+  provider: ^6.1.2
+  lottie: ^3.0.0
+  font_awesome_flutter: ^10.7.0
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.3
+  flutter_dotenv: ^5.1.0
+
+  http: ^0.13.3
+  shared_preferences: ^2.0.7
+  google_fonts: ^4.0.3
+  flutter_spinkit: ^5.2.0
+  carousel_slider: ^5.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/images/logo.png
+    - assets/images/banner1.jpg
+    - assets/images/banner2.jpg
+    - assets/images/banner3.jpg
+    - assets/images/kids_banner.jpg
+    - assets/images/pregnant_banner.jpg
+    - assets/images/vipplatform.jpg
+    - assets/images/slider1.jpg
+    - assets/images/slider2.jpg
+    - assets/images/slider3.jpg
+    - assets/images/face_care.jpg
+    - assets/images/hair_care.jpg
+    - assets/images/body_care.jpg
+    - assets/images/oral_care.jpg
+    - assets/images/parent_banner.jpg
+    - assets/images/avatar.jpg
+    - assets/images/bcalledukasi.jpg
+    - .env

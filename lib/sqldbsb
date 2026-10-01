@@ -1,0 +1,203 @@
+ie-parentapp7
+created_at timestamp with time zone DEFAULT now()
+
+
+
+create policy "policyieparents"
+on "public"."users"
+as PERMISSIVE
+for INSERT
+to public
+with check (
+  email IS NOT NULL AND role = 'parent'
+);
+
+
+
+create table if not exists public.plans (
+  id bigserial primary key,
+  title text not null,
+  description text not null,
+  created_at timestamp with time zone default now(),
+  user_id uuid references auth.users(id) on delete cascade
+);
+-- Tambahkan kolom 'category'
+ALTER TABLE plans
+ADD COLUMN category TEXT;
+
+-- Tambahkan kolom 'difficulty_level'
+ALTER TABLE plans
+ADD COLUMN difficulty_level TEXT;
+
+-- Tambahkan kolom 'due_date'
+-- timestamp with time zone (timestamptz) adalah tipe data yang baik untuk tanggal dan waktu
+-- karena menyimpan informasi zona waktu dan direkomendasikan oleh Supabase.
+ALTER TABLE plans
+ADD COLUMN due_date TIMESTAMPTZ;
+
+-- Tambahkan kolom 'priority'
+-- INTEGER adalah tipe data yang cocok untuk skala prioritas (misalnya, 1-5).
+ALTER TABLE plans
+ADD COLUMN priority INTEGER;
+
+
+-- Hanya user yang membuat rencana dapat melihat/mengedit miliknya
+create policy "User dapat mengakses rencana miliknya"
+on plans
+for all
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+
+
+create table users (
+  id uuid primary key references auth.users(id),
+  username text,
+  created_at timestamp default now()
+);
+-- Tambahkan kolom yang dibutuhkan
+ALTER TABLE users
+ADD COLUMN name TEXT,
+ADD COLUMN phone TEXT,
+ADD COLUMN updated_at TIMESTAMP;
+
+
+
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow users to update their own data"
+ON users
+FOR UPDATE
+USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Allow users to insert their own data"
+ON users
+FOR INSERT
+WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Allow users to read their own data"
+ON users
+FOR SELECT
+USING (auth.uid() = id);
+
+ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'User';
+
+
+
+create table if not exists public.activities (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references auth.users(id) on delete cascade,
+  title text not null,
+  description text,
+  date timestamp with time zone default timezone('utc'::text, now()),
+  color text default 'blue'
+);
+
+-- Aktifkan RLS
+alter table public.activities enable row level security;
+
+-- Policy agar user hanya bisa akses aktivitasnya sendiri
+create policy "User dapat melihat aktivitasnya"
+on public.activities for select
+using (auth.uid() = user_id);
+
+create policy "User dapat menambahkan aktivitas"
+on public.activities for insert
+with check (auth.uid() = user_id);
+
+
+
+-- Aktifkan RLS
+alter table users enable row level security;
+
+-- Hanya pemilik akun yang boleh akses datanya
+create policy "User can access own profile"
+on users for select using (auth.uid() = id);
+
+create policy "User can update own profile"
+on users for update using (auth.uid() = id);
+
+
+
+CREATE TABLE learning_styles (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  result_type TEXT NOT NULL, -- contoh: 'Visual', 'Auditori', 'Kinestetik', 'Campuran'
+  description TEXT,          -- penjelasan gaya belajar
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+
+
+create table learning_style_questions (
+  id bigint generated always as identity primary key,
+  text text not null,
+  type text check (type in ('visual', 'auditory', 'kinesthetic')),
+  created_at timestamp with time zone default timezone('utc', now())
+);
+INSERT INTO learning_style_questions (text, type) VALUES
+('Saya lebih mudah mengingat informasi melalui gambar.', 'visual'),
+('Saya suka belajar dengan diagram atau peta konsep.', 'visual'),
+('Saya merasa lebih memahami saat melihat presentasi visual.', 'visual'),
+('Saya sering mencatat dengan simbol atau warna berbeda.', 'visual'),
+('Saya menikmati buku yang penuh ilustrasi atau grafik.', 'visual'),
+('Saya lebih suka melihat video tutorial daripada membaca teks.', 'visual'),
+('Saya lebih nyaman dengan tampilan visual saat belajar.', 'visual'),
+('Saya sering menggunakan highlight warna saat belajar.', 'visual'),
+('Saya memahami pelajaran lebih baik dengan animasi.', 'visual'),
+('Saya suka membuat mind map atau bagan.', 'visual'),
+
+('Saya lebih paham saat mendengarkan penjelasan guru.', 'auditory'),
+('Saya suka mendengar podcast atau rekaman edukasi.', 'auditory'),
+('Saya suka belajar sambil mendengarkan musik.', 'auditory'),
+('Saya senang berdiskusi untuk memahami materi.', 'auditory'),
+('Saya cenderung mengulang kata-kata dalam hati saat belajar.', 'auditory'),
+('Saya lebih peka terhadap nada dan intonasi suara.', 'auditory'),
+('Saya belajar efektif melalui percakapan atau tanya jawab.', 'auditory'),
+('Saya mudah mengingat lagu dan lirik.', 'auditory'),
+('Saya memahami sesuatu saat saya menjelaskannya kepada orang lain.', 'auditory'),
+('Saya suka belajar dengan membaca keras-keras.', 'auditory'),
+
+('Saya lebih suka belajar melalui praktik langsung.', 'kinesthetic'),
+('Saya suka membuat kerajinan atau eksperimen.', 'kinesthetic'),
+('Saya mudah mengingat saat melakukan sesuatu secara fisik.', 'kinesthetic'),
+('Saya merasa lebih paham ketika bergerak saat belajar.', 'kinesthetic'),
+('Saya suka belajar sambil berjalan atau bergerak.', 'kinesthetic'),
+('Saya cepat bosan jika harus duduk lama.', 'kinesthetic'),
+('Saya suka bermain peran atau simulasi belajar.', 'kinesthetic'),
+('Saya senang olahraga atau aktivitas fisik saat belajar.', 'kinesthetic'),
+('Saya terbiasa menggerakkan tangan saat menjelaskan.', 'kinesthetic'),
+('Saya suka belajar melalui permainan interaktif.', 'kinesthetic');
+
+
+
+create table carts (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references auth.users(id) on delete cascade,
+  product_name text not null,
+  product_image text,
+  quantity int not null default 1,
+  created_at timestamp with time zone default timezone('utc', now())
+);
+-- Policy untuk SELECT, INSERT, UPDATE, DELETE hanya untuk user yang cocok
+create policy "User hanya bisa akses keranjang mereka"
+on carts
+for all
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+create table products (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  image_url text,
+  created_at timestamp with time zone default now()
+);
+
+create table product_details (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid references products(id) on delete cascade,
+  price numeric(10,2) not null,
+  description text,
+  created_at timestamp with time zone default now()
+);
